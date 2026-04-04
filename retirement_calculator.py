@@ -45,8 +45,8 @@ with st.sidebar:
 
     # Growth Phase
     st.subheader("🌱 Growth Phase")
-    current_age = st.slider("Current Age", 18, 80, 50, 1)
-    retirement_age = st.slider("Retirement Age", max(current_age + 1, 50), 80, 65, 1)
+    current_age = st.slider("Current Age", 18, 100, 50, 1)
+    retirement_age = st.slider("Retirement Age", max(current_age + 1, 50), 100, 65, 1)
     initial_balance = st.number_input(
         "Initial Super Balance ($)",
         min_value=0, max_value=10000000, value=200000, step=10000,
@@ -71,7 +71,8 @@ with st.sidebar:
     )
 
     st.subheader("📈 Assumptions")
-    nominal_return = st.slider("Nominal Return (%)", 0.0, 20.0, 7.0, 0.5)
+    nominal_return_growth = st.slider("Nominal Return - Growth Phase (%)", 0.0, 30.0, 7.0, 0.5)
+    nominal_return_retirement = st.slider("Nominal Return - Retirement Phase (%)", 0.0, 30.0, 5.0, 0.5)
     inflation = st.slider("Inflation (%)", 0.0, 10.0, 3.0, 0.5)
 
     st.subheader("🏖️ Drawdown Phase")
@@ -80,11 +81,12 @@ with st.sidebar:
         min_value=0, max_value=500000, value=132000, step=5000,
         format="%d"
     )
-    retirement_duration = st.slider("Years in Retirement", 10, 50, 20, 1)
+    retirement_duration = st.slider("Years in Retirement", 10, 80, 20, 1)
 
 # ── CALCULATIONS ─────────────────────────────────────────────────────────────
 # Convert percentages
-nominal_return_decimal = nominal_return / 100
+nominal_return_growth_decimal = nominal_return_growth / 100
+nominal_return_retirement_decimal = nominal_return_retirement / 100
 inflation_decimal = inflation / 100
 
 # Initialize arrays
@@ -116,7 +118,7 @@ for age in range(current_age, retirement_age + 1):
     total_contrib = employer + sacrifice + current_nc
 
     # Calculate profit and tax (15% on profits in accumulation)
-    profit = balance * nominal_return_decimal
+    profit = balance * nominal_return_growth_decimal
     tax = profit * 0.15
     net_profit = profit - tax
 
@@ -143,7 +145,7 @@ for year in range(retirement_duration):
     age = retirement_age + 1 + year
 
     # Apply return then subtract withdrawal (no tax in pension phase)
-    closing = balance * (1 + nominal_return_decimal) - withdrawal
+    closing = balance * (1 + nominal_return_retirement_decimal) - withdrawal
     closing = max(closing, 0)
 
     # Store data
@@ -263,7 +265,7 @@ fig.add_vline(
 fig.update_layout(
     barmode='stack',
     title={
-        'text': f"Retirement Projection: Growth → Drawdown<br><sub>Retire at {retirement_age} with ${balance_at_retirement:,.0f}  |  Return: {nominal_return:.1f}%  |  Inflation: {inflation:.1f}%</sub>",
+        'text': f"Retirement Projection: Growth → Drawdown<br><sub>Retire at {retirement_age} with ${balance_at_retirement:,.0f}  |  Return: {nominal_return_growth:.1f}% (growth) / {nominal_return_retirement:.1f}% (retirement)  |  Inflation: {inflation:.1f}%</sub>",
         'x': 0.5,
         'xanchor': 'center',
         'font': {'size': 20, 'color': '#E0E0E0'}
