@@ -1,1 +1,6 @@
+[server]
+enableXsrfProtection = false
+enableCORS = false
 
+[browser]
+serverAddress = "retirement-calculator-5ertdfejjxgzsedg5ffwzq.streamlit.app"
