@@ -83,6 +83,16 @@ with st.sidebar:
     )
     retirement_duration = st.slider("Years in Retirement", 10, 80, 20, 1)
 
+# ── MIN DRAWDOWN RATES ───────────────────────────────────────────────────────
+def min_drawdown_rate(age):
+    if age < 65:   return 0.04
+    elif age <= 74: return 0.05
+    elif age <= 79: return 0.06
+    elif age <= 84: return 0.07
+    elif age <= 89: return 0.09
+    elif age <= 94: return 0.11
+    else:           return 0.14
+
 # ── CALCULATIONS ─────────────────────────────────────────────────────────────
 # Convert percentages
 nominal_return_growth_decimal = nominal_return_growth / 100
@@ -94,6 +104,8 @@ ages = []
 balances = []
 contributions_list = []
 withdrawals_list = []
+withdrawals_spending_list = []
+withdrawals_minimum_list = []
 phase_labels = []
 employer_contribs = []
 sacrifice_contribs = []
@@ -130,6 +142,8 @@ for age in range(current_age, retirement_age + 1):
     balances.append(balance)
     contributions_list.append(total_contrib)
     withdrawals_list.append(0)
+    withdrawals_spending_list.append(0)
+    withdrawals_minimum_list.append(0)
     phase_labels.append('Growth')
     employer_contribs.append(employer)
     sacrifice_contribs.append(sacrifice)
@@ -144,15 +158,28 @@ withdrawal = first_withdrawal
 for year in range(retirement_duration):
     age = retirement_age + 1 + year
 
+    # Minimum drawdown: mandatory floor based on age (applied to opening balance)
+    min_rate = min_drawdown_rate(age)
+    w_minimum = balance * min_rate
+
+    # Total withdrawal = max of desired spending or mandatory minimum
+    total_withdrawal = max(withdrawal, w_minimum)
+
+    # Split for chart: minimum is the floor, spending is the excess above it
+    chart_minimum = w_minimum
+    chart_spending = total_withdrawal - w_minimum  # 0 if spending < minimum
+
     # Apply return then subtract withdrawal (no tax in pension phase)
-    closing = balance * (1 + nominal_return_retirement_decimal) - withdrawal
+    closing = balance * (1 + nominal_return_retirement_decimal) - total_withdrawal
     closing = max(closing, 0)
 
     # Store data
     ages.append(age)
     balances.append(closing)
     contributions_list.append(0)
-    withdrawals_list.append(withdrawal)
+    withdrawals_list.append(total_withdrawal)
+    withdrawals_spending_list.append(chart_spending)
+    withdrawals_minimum_list.append(chart_minimum)
     phase_labels.append('Drawdown')
     employer_contribs.append(0)
     sacrifice_contribs.append(0)
@@ -176,6 +203,8 @@ df = pd.DataFrame({
     'Balance': balances,
     'Contributions': contributions_list,
     'Withdrawals': withdrawals_list,
+    'Withdrawals_Spending': withdrawals_spending_list,
+    'Withdrawals_Minimum': withdrawals_minimum_list,
     'Phase': phase_labels,
     'Employer_SG': employer_contribs,
     'Salary_Sacrifice': sacrifice_contribs,
@@ -241,14 +270,24 @@ if len(drawdown_df) > 0:
         hovertemplate='<b>Age %{x}</b><br>Balance: $%{y:,.0f}<extra></extra>'
     ))
 
-    # Drawdown phase - Withdrawals (stacked on top in light yellow)
+    # Drawdown phase - Minimum withdrawal (mandatory floor, stacked first)
     fig.add_trace(go.Bar(
         x=drawdown_df['Age'],
-        y=drawdown_df['Withdrawals'],
-        name="Annual Withdrawals",
-        marker_color='#FFFAAA',
+        y=drawdown_df['Withdrawals_Minimum'],
+        name="Annual Withdrawal - Minimum",
+        marker_color='#FF8C00',
         base=drawdown_df['Balance'],
-        hovertemplate='<b>Age %{x}</b><br>Withdrawal: $%{y:,.0f}<extra></extra>'
+        hovertemplate='<b>Age %{x}</b><br>Minimum: $%{y:,.0f}<extra></extra>'
+    ))
+
+    # Drawdown phase - Spending withdrawal (excess above minimum)
+    fig.add_trace(go.Bar(
+        x=drawdown_df['Age'],
+        y=drawdown_df['Withdrawals_Spending'],
+        name="Annual Withdrawal - Spending",
+        marker_color='#FFFAAA',
+        base=drawdown_df['Balance'] + drawdown_df['Withdrawals_Minimum'],
+        hovertemplate='<b>Age %{x}</b><br>Spending: $%{y:,.0f}<extra></extra>'
     ))
 
 # Add vertical line at retirement
