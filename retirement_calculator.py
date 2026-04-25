@@ -275,7 +275,7 @@ if len(drawdown_df) > 0:
         x=drawdown_df['Age'],
         y=drawdown_df['Withdrawals_Minimum'],
         name="Annual Withdrawal - Minimum",
-        marker_color='#FF8C00',
+        marker_color='#FFFAAA',
         base=drawdown_df['Balance'],
         hovertemplate='<b>Age %{x}</b><br>Minimum: $%{y:,.0f}<extra></extra>'
     ))
@@ -285,7 +285,7 @@ if len(drawdown_df) > 0:
         x=drawdown_df['Age'],
         y=drawdown_df['Withdrawals_Spending'],
         name="Annual Withdrawal - Spending",
-        marker_color='#FFFAAA',
+        marker_color='#FF8C00',
         base=drawdown_df['Balance'] + drawdown_df['Withdrawals_Minimum'],
         hovertemplate='<b>Age %{x}</b><br>Spending: $%{y:,.0f}<extra></extra>'
     ))
