@@ -45,8 +45,28 @@ st.markdown("""
         [data-testid="stMetricValue"] {font-size: 16px;}
         [data-testid="stMetricLabel"] {font-size: 11px;}
         h1 {font-size: 1.4rem !important;}
-        /* Full-width download button */
         .stDownloadButton {width: 100%;}
+    }
+    /* ── LANDSCAPE FULLSCREEN MODE ── */
+    @media screen and (orientation: landscape) and (max-height: 600px) {
+        /* Hide Streamlit chrome to maximise chart space */
+        header[data-testid="stHeader"] {display: none !important;}
+        footer {display: none !important;}
+        #MainMenu {display: none !important;}
+        /* Collapse top/side padding so chart fills the screen */
+        .block-container {
+            padding-top: 0.3rem !important;
+            padding-bottom: 0 !important;
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+            max-width: 100% !important;
+        }
+        /* Stretch the Plotly container to viewport height */
+        [data-testid="stPlotlyChart"] > div {
+            height: calc(100vh - 48px) !important;
+        }
+        /* Hide everything except the chart in landscape */
+        .landscape-hide {display: none !important;}
     }
 </style>
 """, unsafe_allow_html=True)
@@ -337,6 +357,7 @@ fig.update_layout(
     plot_bgcolor='#1C1C2E',
     paper_bgcolor='#1C1C2E',
     font=dict(color='#E0E0E0', size=12),
+    dragmode='pan',
     height=550,
     legend=dict(
         orientation="h",
@@ -363,10 +384,19 @@ fig.update_layout(
     )
 )
 
-# Display chart
-st.plotly_chart(fig, use_container_width=True)
+# Display chart — touch-optimised config
+plotly_config = {
+    'scrollZoom': True,          # pinch-to-zoom on mobile
+    'responsive': True,          # fills container in landscape
+    'displayModeBar': True,      # always show toolbar (not just on hover)
+    'displaylogo': False,
+    'modeBarButtonsToRemove': ['select2d', 'lasso2d', 'autoScale2d', 'resetScale2d'],
+    # Buttons kept: pan, zoom in/out, reset axes, fullscreen (⤢)
+}
+st.plotly_chart(fig, use_container_width=True, config=plotly_config)
 
 # ── SUMMARY METRICS ──────────────────────────────────────────────────────────
+st.markdown("<div class='landscape-hide'>", unsafe_allow_html=True)
 st.markdown("---")
 col1, col2, col3, col4 = st.columns(4)
 
@@ -409,5 +439,6 @@ st.markdown("""
 <div style='text-align: center; color: #888; font-size: 12px;'>
     <p>Retirement Projections Calculator | Bamboo Trading</p>
     <p>Assumptions: 12% SG, 15% tax on contributions & profits (accumulation phase), 0% tax (pension phase)</p>
+</div>
 </div>
 """, unsafe_allow_html=True)
