@@ -13,60 +13,23 @@ import numpy as np
 st.set_page_config(
     page_title="Retirement Calculator | Bamboo Trading",
     page_icon="🎯",
-    layout="centered",
-    initial_sidebar_state="collapsed"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
 # ── CUSTOM CSS ───────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
     .main {background-color: #1C1C2E;}
-    h1 {color: #32CD32 !important; font-size: clamp(1.4rem, 5vw, 2.2rem) !important;}
+    h1 {color: #32CD32 !important;}
     h2, h3 {color: #E0E0E0 !important;}
     .stSlider > div > div > div {background-color: #32CD32;}
-    [data-testid="stMetricValue"] {font-size: clamp(18px, 4vw, 28px); color: #32CD32;}
-    [data-testid="stMetricLabel"] {color: #E0E0E0; font-size: clamp(11px, 3vw, 14px);}
+    [data-testid="stMetricValue"] {font-size: 28px; color: #32CD32;}
+    [data-testid="stMetricLabel"] {color: #E0E0E0;}
     .stDownloadButton > button {
         background-color: #32CD32;
         color: white;
         font-weight: bold;
-        width: 100%;
-        padding: 0.6rem 1rem;
-    }
-    /* Sidebar inputs: larger touch targets on mobile */
-    .stSlider, .stNumberInput {margin-bottom: 0.75rem;}
-    /* Stack 4-column metrics to 2x2 on small screens */
-    @media (max-width: 640px) {
-        [data-testid="column"] {
-            width: 50% !important;
-            flex: 0 0 50% !important;
-            min-width: 50% !important;
-        }
-        [data-testid="stMetricValue"] {font-size: 16px;}
-        [data-testid="stMetricLabel"] {font-size: 11px;}
-        h1 {font-size: 1.4rem !important;}
-        .stDownloadButton {width: 100%;}
-    }
-    /* ── LANDSCAPE FULLSCREEN MODE ── */
-    @media screen and (orientation: landscape) and (max-height: 600px) {
-        /* Hide Streamlit chrome to maximise chart space */
-        header[data-testid="stHeader"] {display: none !important;}
-        footer {display: none !important;}
-        #MainMenu {display: none !important;}
-        /* Collapse top/side padding so chart fills the screen */
-        .block-container {
-            padding-top: 0.3rem !important;
-            padding-bottom: 0 !important;
-            padding-left: 0.5rem !important;
-            padding-right: 0.5rem !important;
-            max-width: 100% !important;
-        }
-        /* Stretch the Plotly container to viewport height */
-        [data-testid="stPlotlyChart"] > div {
-            height: calc(100vh - 48px) !important;
-        }
-        /* Hide everything except the chart in landscape */
-        .landscape-hide {display: none !important;}
     }
 </style>
 """, unsafe_allow_html=True)
@@ -74,11 +37,6 @@ st.markdown("""
 # ── TITLE ────────────────────────────────────────────────────────────────────
 st.title("🎯 Retirement Projections Calculator")
 st.markdown("*Adjust sliders to see real-time retirement projections (Growth + Drawdown)*")
-st.markdown("""
-<div style='background:#2A2A3E; border-left:3px solid #32CD32; padding:8px 12px; border-radius:4px; font-size:13px; color:#B0B0C0; margin-bottom:8px;'>
-📱 <b>Mobile:</b> Tap <b>☰</b> (top-left) to open inputs &nbsp;|&nbsp; 🖥️ <b>Desktop:</b> Use the left sidebar
-</div>
-""", unsafe_allow_html=True)
 st.markdown("---")
 
 # ── SIDEBAR INPUTS ───────────────────────────────────────────────────────────
@@ -317,7 +275,7 @@ if len(drawdown_df) > 0:
         x=drawdown_df['Age'],
         y=drawdown_df['Withdrawals_Minimum'],
         name="Annual Withdrawal - Minimum",
-        marker_color='#FF8C00',
+        marker_color='#FFFAAA',
         base=drawdown_df['Balance'],
         hovertemplate='<b>Age %{x}</b><br>Minimum: $%{y:,.0f}<extra></extra>'
     ))
@@ -327,7 +285,7 @@ if len(drawdown_df) > 0:
         x=drawdown_df['Age'],
         y=drawdown_df['Withdrawals_Spending'],
         name="Annual Withdrawal - Spending",
-        marker_color='#CC7000',
+        marker_color='#FF8C00',
         base=drawdown_df['Balance'] + drawdown_df['Withdrawals_Minimum'],
         hovertemplate='<b>Age %{x}</b><br>Spending: $%{y:,.0f}<extra></extra>'
     ))
@@ -346,7 +304,7 @@ fig.add_vline(
 fig.update_layout(
     barmode='stack',
     title={
-        'text': f"Retirement Projection: Growth → Drawdown<br><sub>Retire at {retirement_age}  |  Balance: ${balance_at_retirement:,.0f}  |  Inflation: {inflation:.1f}%</sub>",
+        'text': f"Retirement Projection: Growth → Drawdown<br><sub>Retire at {retirement_age} with ${balance_at_retirement:,.0f}  |  Return: {nominal_return_growth:.1f}% (growth) / {nominal_return_retirement:.1f}% (retirement)  |  Inflation: {inflation:.1f}%</sub>",
         'x': 0.5,
         'xanchor': 'center',
         'font': {'size': 20, 'color': '#E0E0E0'}
@@ -357,26 +315,22 @@ fig.update_layout(
     plot_bgcolor='#1C1C2E',
     paper_bgcolor='#1C1C2E',
     font=dict(color='#E0E0E0', size=12),
-    dragmode='pan',
-    height=550,
+    height=650,
     legend=dict(
-        orientation="h",
-        yanchor="bottom",
-        y=-0.35,
-        xanchor="center",
-        x=0.5,
+        orientation="v",
+        yanchor="top",
+        y=0.98,
+        xanchor="left",
+        x=0.01,
         bgcolor='rgba(28, 28, 46, 0.95)',
         bordercolor='#32CD32',
-        borderwidth=1,
-        font=dict(size=10, color='#E0E0E0'),
-        tracegroupgap=4
+        borderwidth=2,
+        font=dict(size=11, color='#E0E0E0')
     ),
-    margin=dict(b=160),
     xaxis=dict(
         gridcolor='#6B6B8B',
         gridwidth=0.5,
-        dtick=10,
-        tickfont=dict(size=11)
+        dtick=5
     ),
     yaxis=dict(
         gridcolor='#6B6B8B',
@@ -384,19 +338,10 @@ fig.update_layout(
     )
 )
 
-# Display chart — touch-optimised config
-plotly_config = {
-    'scrollZoom': True,          # pinch-to-zoom on mobile
-    'responsive': True,          # fills container in landscape
-    'displayModeBar': True,      # always show toolbar (not just on hover)
-    'displaylogo': False,
-    'modeBarButtonsToRemove': ['select2d', 'lasso2d', 'autoScale2d', 'resetScale2d'],
-    # Buttons kept: pan, zoom in/out, reset axes, fullscreen (⤢)
-}
-st.plotly_chart(fig, use_container_width=True, config=plotly_config)
+# Display chart
+st.plotly_chart(fig, use_container_width=True)
 
 # ── SUMMARY METRICS ──────────────────────────────────────────────────────────
-st.markdown("<div class='landscape-hide'>", unsafe_allow_html=True)
 st.markdown("---")
 col1, col2, col3, col4 = st.columns(4)
 
@@ -439,6 +384,5 @@ st.markdown("""
 <div style='text-align: center; color: #888; font-size: 12px;'>
     <p>Retirement Projections Calculator | Bamboo Trading</p>
     <p>Assumptions: 12% SG, 15% tax on contributions & profits (accumulation phase), 0% tax (pension phase)</p>
-</div>
 </div>
 """, unsafe_allow_html=True)
